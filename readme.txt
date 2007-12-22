@@ -15,6 +15,12 @@ The plugin is highly configurable and also allows caching of the ga.js file loca
 
 The plugin is highly configurable, yet simple. A normal user only needs to specify his / her Analytics UID, while advanced users can completely configure the plugin.
 
+**Support**
+
+* [FAQ](http://www.joycebabu.com/downloads/local-analytics/#faq)
+* [Help](http://www.joycebabu.com/downloads/local-analytics/#respond)
+* [Version History](http://www.joycebabu.com/downloads/local-analytics/#changelog)
+
 **Features**
 
 * Highly configurable
@@ -26,11 +32,6 @@ The plugin is highly configurable, yet simple. A normal user only needs to speci
 * Includes support for tracking visits to Admin Panels
 * Includes support for tracking logged in users
 
-**Support**
-
-* [FAQ](http://www.joycebabu.com/downloads/local-analytics/#faq)
-* [Help](http://www.joycebabu.com/downloads/local-analytics/#respond)
-* [Version History](http://www.joycebabu.com/downloads/local-analytics/#changelog)
 
 == Installation ==
 

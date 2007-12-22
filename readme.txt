@@ -26,15 +26,16 @@ The plugin is highly configurable, yet simple. A normal user only needs to speci
 * Includes support for tracking visits to Admin Panels
 * Includes support for tracking logged in users
 
+* [Support](http://www.joycebabu.com/downloads/local-analytics/#respond)
+* [Version History](http://www.joycebabu.com/downloads/local-analytics/#changelog)
+* [FAQ](http://www.joycebabu.com/downloads/local-analytics/#faq)
+
 == Installation ==
 
 1. Download, unzip & upload the plugin to your '*/wp-content/plugins/*' directory
 2. Activate the plugin through the '*Plugins*' menu in WordPress
 3. Go to *Options / Local Analytics* and enter your Google Analytics UID and hit the *Save Options* button
 
-* [Support](http://www.joycebabu.com/downloads/local-analytics/#respond)
-* [Version History](http://www.joycebabu.com/downloads/local-analytics/#changelog)
-* [FAQ](http://www.joycebabu.com/downloads/local-analytics/#faq)
 
 == Frequently Asked Questions ==
 

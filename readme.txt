@@ -26,9 +26,11 @@ The plugin is highly configurable, yet simple. A normal user only needs to speci
 * Includes support for tracking visits to Admin Panels
 * Includes support for tracking logged in users
 
-* [Support](http://www.joycebabu.com/downloads/local-analytics/#respond)
-* [Version History](http://www.joycebabu.com/downloads/local-analytics/#changelog)
+**Support**
+
 * [FAQ](http://www.joycebabu.com/downloads/local-analytics/#faq)
+* [Help](http://www.joycebabu.com/downloads/local-analytics/#respond)
+* [Version History](http://www.joycebabu.com/downloads/local-analytics/#changelog)
 
 == Installation ==
 

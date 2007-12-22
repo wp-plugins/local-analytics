@@ -117,7 +117,7 @@ function locan_parse_link($matches){
 	$extFilter = get_option('locan_tracked_extensions');
 	$intDomains = get_option('locan_internal_domains');
 	$url = (($pos = strpos($matches[3], '?')) === false) ? $matches[3] : substr($matches[3], 0, $pos);
-	$url = parse_url($url);
+	$url = @parse_url($url);
 	$url_no_scheme = $url['host'] . $url['path'] . /*(empty($url['query']) ? '' : "?{$url['query']}") . */(empty($url['fragment']) ? '' : "?{$url['fragment']}");//ltrim(str_replace('http://', '', $matches[3]), '/');
 	if(!(empty($url['host']) || empty($intDomains)) && !eregi("^($intDomains)$", $url['host'])){
 		if(get_option('locan_track_external')){
@@ -139,7 +139,7 @@ function locan_parse_link($matches){
 
 function locan_parse_content($content){
 	if(LOCAL_ANALYTICS_TRACKING_ENABLED){
-		return preg_replace_callback(LOCAL_ANALYTICS_ANCHOR_REGEX, 'locan_parse_link', $content);
+		return @preg_replace_callback(LOCAL_ANALYTICS_ANCHOR_REGEX, 'locan_parse_link', $content);
 	}else{
 		return $content;
 	}

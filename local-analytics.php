@@ -3,7 +3,7 @@
 Plugin Name: Local Analytics
 Plugin URI: http://www.joycebabu.com/downloads/local-analytics/
 Description: Periodically downloads and serves urchin.js from your server.
-Version: 1.13
+Version: 1.1.3
 Author: Joyce Babu
 Author URI: http://www.joycebabu.com/
 */
@@ -25,7 +25,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-DEFINE('LOCAL_ANALYTICS_VERSION', '1.13');
+DEFINE('LOCAL_ANALYTICS_VERSION', '1.1.3');
 DEFINE('LOCAL_ANALYTICS_PATH', basename(dirname(__FILE__)) . '/' . basename(__FILE__));
 DEFINE('LOCAL_ANALYTICS_ANCHOR_REGEX', '/<a (.*?)href=(["\'])(.*?)\\2(.*?)>(.*?)<\/a>/i');
 

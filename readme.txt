@@ -4,7 +4,7 @@ Donate link:
 Tags: google analytics, google, analytics, tracking, statistics, stat
 Requires at least: 2.3
 Tested up to: 2.3.1
-Stable tag: 1.13
+Stable tag: 1.1.3
 
 Local Analytics is a plugin for integrating Google Analytics (http://www.google.com/analytics/) in your Wordpress powered blog. The plugin can download and serve urchin.js to your server and automatically update it at regular intervals.
 

@@ -49,6 +49,7 @@ addLoadEvent( function() {
 	var manager = new dbxManager("local-analytics");
 	//create new docking boxes group
 	var locan_options = new dbxGroup("locan-uninstall", "vertical", "10", "no", "10", "yes", "closed", "open", "close", "click-down and drag to move this box", "click to %toggle% this box", "use the arrow keys to move this box", ", or press the enter key to %toggle% it", "%mytitle% [%dbxtitle%]");
+	var locan_uninstall = new dbxGroup("locan-ads", "vertical", "10", "no", "10", "yes", "open", "open", "close", "click-down and drag to move this box", "click to %toggle% this box", "use the arrow keys to move this box", ", or press the enter key to %toggle% it", "%mytitle% [%dbxtitle%]");
 	var locan_uninstall = new dbxGroup("locan-options", "vertical", "10", "no", "10", "yes", "open", "open", "close", "click-down and drag to move this box", "click to %toggle% this box", "use the arrow keys to move this box", ", or press the enter key to %toggle% it", "%mytitle% [%dbxtitle%]");
 	var el = document.getElementsByTagName("a");
 	var current;

@@ -2,8 +2,8 @@
 /*
 Plugin Name: Local Analytics
 Plugin URI: http://www.joycebabu.com/downloads/local-analytics/
-Description: Periodically downloads and serves urchin.js from your server.
-Version: 1.13
+Description: Periodically downloads and serves ga.js from your server.
+Version: 1.2
 Author: Joyce Babu
 Author URI: http://www.joycebabu.com/
 */
@@ -25,7 +25,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-DEFINE('LOCAL_ANALYTICS_VERSION', '1.13');
+DEFINE('LOCAL_ANALYTICS_VERSION', '1.2');
 DEFINE('LOCAL_ANALYTICS_PATH', basename(dirname(__FILE__)) . '/' . basename(__FILE__));
 DEFINE('LOCAL_ANALYTICS_ANCHOR_REGEX', '/<a (.*?)href=(["\'])(.*?)\\2(.*?)>(.*?)<\/a>/i');
 
@@ -36,7 +36,7 @@ add_action('admin_menu', 'locan_admin_menu');
 add_action('admin_print_scripts', 'locan_admin_print_scripts' );
 add_filter('the_content', 'locan_parse_content');
 add_action('admin_footer', 'locan_admin_footer');
-//add_action('admin_footer', 'akismet_warning');
+add_filter('wp_footer', 'locan_wp_footer');
 
 $locan_dirname = basename(dirname(__FILE__));
 $locan_install_dir = ABSPATH . "wp-content/plugins/$locan_dirname/";
@@ -49,19 +49,21 @@ function locan_activate(){
 
 	add_option('locan_uacct', 'UA-XXXXXXX-X', 'Local Analytics: Analytics Key');
 	add_option('locan_disable_tracker', '0', 'Local Analytics: Disable Tracking');
-	add_option('locan_enable_caching', '1', 'Local Analytics: Enable server side caching of urchin.js');
+	add_option('locan_enable_caching', '1', 'Local Analytics: Enable server side caching of ga.js');
 	add_option('locan_use_gzip', '1', 'Local Analytics: User Gzip compression');
 	add_option('locan_cache_time', '24', 'Local Analytics: Time to cache');
 
 	add_option('locan_track_admin', '0', 'Local Analytics: Track visits to admin panel');
 	add_option('locan_track_users', '1', 'Local Analytics: Track visits to admin panel');
 	add_option('locan_track_userlevel', '4', 'Local Analytics: Users with higher userlevel will be ignored');
+	add_option('locan_track_ads', '0', 'Local Analytics: Track clicks on ads');
+	add_option('locan_ads_prefix', '/ads', 'Local Analytics: Prefix for tracked ads');
 	add_option('locan_track_downloads', '1', 'Local Analytics: Track file downloads');
 	add_option('locan_tracked_extensions', 'bmp,bz,doc,dmg,exe,gif,gz,jar,jpg,jpeg,js,mp3,pdf,phps,png,pps,ppt,rar,sit,tar,wav,xls,zip', 'Local Analytics: File extensionds to be tracked');
 	add_option('locan_download_prefix', '/downloads', 'Local Analytics: Prefix for tracked downloads');
 	add_option('locan_track_external', '1', 'Local Analytics: Track visits to external sites');
-	preg_match('@http://(www\.)?(.*)(/.*)?@i', get_bloginfo('url'), $server);
-	add_option('locan_internal_domains', "www.$server[1],$server[1]", 'Local Analytics: Domains considered as internal');
+	preg_match('@http(s)?://(www\.)?(.*)(/.*)?@i', get_bloginfo('url'), $server);
+	add_option('locan_internal_domains', "www.$server[3],$server[3]", 'Local Analytics: Domains considered as internal');
 	add_option('locan_external_prefix', '/external', 'Local Analytics: Prefix for external sites');
 	add_option('locan_track_mailto', '1', 'Local Analytics: Track clicks on email links');
 	add_option('locan_mailto_prefix', '/mailto', 'Local Analytics: Prefix for email links');
@@ -99,17 +101,16 @@ function locan_init(){
 function locan_insert_code(){
 	global $locan_dirname;
 	if(LOCAL_ANALYTICS_TRACKING_ENABLED){
-		$extra = get_option('locan_extra_code');
+		$extra = get_option('locan_extra_code') ? get_option('locan_extra_code') . "\n" : '';
 		echo "\n<!-- Begin Google Analytics Code by Local Analytics Plugin -->\n";
 		if(get_option('locan_enable_caching')){
 			$src = "/wp-content/plugins/$locan_dirname/local-urchin-js.php";
 			wp_register_script('local-analytics-urchin', $src, false, '1.0');
 		}else{
-			wp_register_script('local-analytics-urchin', 'http://www.google-analytics.com/urchin.js', false, '');
+			wp_register_script('local-analytics-urchin', ((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off') ? 'http://www.' : 'https://ssl.') . 'google-analytics.com/ga.js', false, '');
 		}
-		$uacct = '_uacct = "' . get_option('locan_uacct') . '";';
 		wp_print_scripts(array('local-analytics-urchin'));
-		echo "<script type='text/javascript'>\n\t$uacct\n\t$extra\n\turchinTracker();\n</script>\n<!-- End Google Analytics Code by Local Analytics Plugin -->\n";
+		echo "<script type=\"text/javascript\">\nvar pageTracker = _gat._getTracker(\"" . get_option('locan_uacct') . "\");\n{$extra}pageTracker._initData();\npageTracker._trackPageview();\n</script>\n<!-- End Google Analytics Code by Local Analytics Plugin -->\n";
 	}
 }
 
@@ -122,16 +123,16 @@ function locan_parse_link($matches){
 	if(!(empty($url['host']) || empty($intDomains)) && !eregi("^($intDomains)$", $url['host'])){
 		if(get_option('locan_track_external')){
 			$track_url = get_option('locan_external_prefix') . '/' . $url_no_scheme;
-			$matches[4] .= " onclick=\"javascript:urchinTracker('$track_url');\" ";	
+			$matches[4] .= " onclick=\"javascript:pageTracker._trackPageview('$track_url');\" ";	
 		}
 	}else{
 		// Check for download link
 		if(!empty($extFilter) && eregi("($extFilter)$", $matches[3]) && get_option('locan_track_downloads')){
 			$track_url = get_option('locan_download_prefix') . $url['path'];
-			$matches[4] .= " onclick=\"javascript:urchinTracker('$track_url');\" ";
+			$matches[4] .= " onclick=\"javascript:pageTracker._trackPageview('$track_url');\" ";
 		}elseif(get_option('locan_track_mailto') && (substr($matches[3], 0, 7) == 'mailto:')){
 			$track_url = get_option('locan_mailto_prefix') . '/'. substr($matches[3], 7);
-			$matches[4] .= " onclick=\"javascript:urchinTracker('$track_url');\" ";
+			$matches[4] .= " onclick=\"javascript:pageTracker._trackPageview('$track_url');\" ";
 		}
 	}
 	return "\n<a $matches[1] href=$matches[2]$matches[3]$matches[2]$matches[4]>$matches[5]</a>";
@@ -142,6 +143,15 @@ function locan_parse_content($content){
 		return preg_replace_callback(LOCAL_ANALYTICS_ANCHOR_REGEX, 'locan_parse_link', $content);
 	}else{
 		return $content;
+	}
+}
+
+function locan_wp_footer(){
+	global $locan_dirname;
+	if(LOCAL_ANALYTICS_TRACKING_ENABLED && get_option('locan_track_ads')){
+		echo "\n<!-- Begin Ad Click Tracking Code by Local Analytics Plugin -->\n";
+		echo "<script type='text/javascript' src='/wp-content/plugins/$locan_dirname/local-astrack.php'></script>";
+		echo "\n<!-- End Ad Click Tracking Code by Local Analytics Plugin -->\n";
 	}
 }
 
@@ -224,6 +234,8 @@ function locan_admin_options_page(){
 		update_option('locan_track_admin', $_POST['track_admin']);
 		update_option('locan_track_users', $_POST['track_users']);
 		update_option('locan_track_userlevel', $_POST['track_userlevel']);
+		update_option('locan_track_ads', $_POST['track_ads']);
+		update_option('locan_ads_prefix', $_POST['ads_prefix']);
 		$trackedExtensions = locan_list_2_array($_POST['tracked_extensions']);
 		if(empty($trackedExtensions)){
 			update_option('locan_track_downloads', '');
@@ -245,7 +257,7 @@ function locan_admin_options_page(){
 		update_option('locan_extra_code', trim($_POST['extra_code']));
 		echo "<div id='message' class='updated fade-00ff00'><p><strong>Options updated!</strong></p></div>";
 	}elseif($_POST['process'] == 2){
-		$ar_locan_option = array('locan_localfile', 'locan_use_gzip', 'locan_disable_tracker', 'locan_enable_caching', 'locan_cache_time', 'locan_uacct', 'locan_track_admin', 'locan_track_users', 'locan_track_userlevel','locan_track_downloads', 'locan_tracked_extensions', 'locan_download_prefix', 'locan_track_external', 'locan_internal_domains', 'locan_external_prefix', 'locan_track_mailto', 'locan_mailto_prefix', 'locan_extra_code');
+		$ar_locan_option = array('locan_localfile', 'locan_use_gzip', 'locan_disable_tracker', 'locan_enable_caching', 'locan_cache_time', 'locan_uacct', 'locan_track_admin', 'locan_track_users', 'locan_track_userlevel', 'locan_track_ads', 'locan_ads_prefix','locan_track_downloads', 'locan_tracked_extensions', 'locan_download_prefix', 'locan_track_external', 'locan_internal_domains', 'locan_external_prefix', 'locan_track_mailto', 'locan_mailto_prefix', 'locan_extra_code');
 		$delete_success = true;
 		if($_POST['uninstall_accept'] == 1){
 			foreach($ar_locan_option as $locan_option){
@@ -292,7 +304,7 @@ function locan_admin_options_show(){
 			<table cellspacing="0" cellpadding="5" style="width:100%;" class="editform">
 			<tr><th scope="row" style="width:220px;">Analytics Account ID [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Your Analytics Account ID is a unique identifier in the format <strong>UA-XXXXXXX-X</strong>. You can get your Account ID from your <a href="https://www.google.com/support/googleanalytics/bin/answer.py?answer=55603">tracking code</a>. In your tracking code, look for a line similar to <br />_uacct = "<span style="color:maroon;">UA-11111-1</span>";<br/> In the above code <span style="color:maroon;">UA-11111-1</span> is the Account ID.</span></th><td><input type="text" name="uacct" value="<?php echo get_option('locan_uacct');?>" size="15" maxlength="15"/></td></tr>
 			<tr><th scope="row">Disable Tracking [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Use this option to disable tracking temporarily.</span></th><td><input type="checkbox" id="disable" name="disable_tracker" <?php echo (get_option('locan_disable_tracker') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="disable">Disable Local Analytics tracking.</label></td></tr>
-			<tr><th scope="row">Enable Caching [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">If caching is enabled, <span style="color:maroon;">urchin.js</span> will be periodically downloaded to your server and served. This speeds up your page loading and also prevents most of the adblockers from blocking the file. <br /><strong>Enabling this option is recommended</strong>.</span></th><td><input type="checkbox" id="enable_caching" name="enable_caching" <?php echo (get_option('locan_enable_caching') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="enable_caching">Enable local caching of <em>urchin.js</em>.</label></td></tr>
+			<tr><th scope="row">Enable Caching [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">If caching is enabled, <span style="color:maroon;">ga.js</span> will be periodically downloaded to your server and served. This speeds up your page loading and also prevents most of the adblockers from blocking the file. <br /><strong>Enabling this option is recommended</strong>.</span></th><td><input type="checkbox" id="enable_caching" name="enable_caching" <?php echo (get_option('locan_enable_caching') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="enable_caching">Enable local caching of <em>ga.js</em>.</label></td></tr>
 			<tr><th scope="row">Cache time [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">How long should the local file be cached (in hours).</span></th><td><input type="text" name="cache_time" value="<?php echo get_option('locan_cache_time');?>" size="15" maxlength="4"/></td></tr>
 			<tr><th scope="row">Enable Gzip [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">This option should be disabled if your server is using Zlib Compression for Javascript files.</span></th><td><input type="checkbox" id="use_gzip" name="use_gzip" <?php echo (get_option('locan_use_gzip') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="use_gzip">Use mod_gzip to compress the Javascript file.</label></td></tr></table>
 		</div></div></fieldset>
@@ -302,7 +314,7 @@ function locan_admin_options_show(){
 		<div class="dbx-c-ontent-wrapper">
 		<div class="dbx-content">
 			<table border="0" cellspacing="0" cellpadding="5" style="width:100%;" class="editform">
-			<tr><th scope="row" style="width:220px;">Track Users</th><td><input type="checkbox" id="track_users" name="track_users" <?php echo (get_option('locan_track_users') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="track_users">Track logged in users with User level less than the ignore value below.<br /></label></td></tr>
+			<tr><th scope="row" style="width:220px;">Track Logged In Users</th><td><input type="checkbox" id="track_users" name="track_users" <?php echo (get_option('locan_track_users') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="track_users">Track logged in users with User level less than the ignore value below.<br /></label></td></tr>
 			<tr><th scope="row">Max. Tracked User Level [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Logged in users with higher user levels will not be tracked, if <strong>Track Logged In Users</strong> is enabled.<br />Select <span style="color:maroon;">Administrator</span> to track all users.</span></th><td><select name="track_userlevel">
 			<?php
 			$track_userlevel = get_option('locan_track_userlevel');
@@ -315,6 +327,8 @@ function locan_admin_options_show(){
 			}
 			?></select></td></tr>
 			<tr><th scope="row">Track Admin Panel [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">This option requires <strong>Track Logged In Users</strong> to be enabled.</span></th><td><input type="checkbox" id="track_admin" name="track_admin" <?php echo (get_option('locan_track_admin') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="track_admin">Track visits to the Administration Panels.</label></td></tr>
+			<tr><th scope="row">Track Ads[<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Local Analytics can track clicks on Adsense and YPN ads. Advanced details are not available, just the number of clicks are recorded.</span></th><td><input type="checkbox" id="track_ads" name="track_ads" <?php echo (get_option('locan_track_ads') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="track_ads">Track clicks on Adsense and YPN ads.</label></td></tr>
+			<tr><th scope="row">Ad Click Prefix [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Adds this prefix to all clicks on ads for easy analysis.</span></th><td><input type="text" name="ads_prefix" class="inputField" value="<?php echo get_option('locan_ads_prefix');?>" size="40"/></td></tr>
 			<tr><th scope="row">Track Outgoing Clicks [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Enable this option to track clicks on external links.</span></th><td><input type="checkbox" id="track_external" name="track_external" <?php echo (get_option('locan_track_external') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="track_external">Track visits to external sites.<br /></label></td></tr>
 			<tr><th scope="row">Internal Domains [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Links to these domains won't be considered as external.</span></th><td><input type="text" name="internal_domains" class="inputField" value="<?php echo $internalDomains;?>" size="40"/></td></tr>
 			<tr><th scope="row">External Prefix [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Adds this prefix to all outgoing clicks for easy analysis.</span></th><td><input type="text" name="external_prefix" class="inputField" value="<?php echo get_option('locan_external_prefix');?>" size="40"/></td></tr>
@@ -323,7 +337,7 @@ function locan_admin_options_show(){
 			<tr><th scope="row">Download Prefix [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Adds this prefix to all tracked downloads for easy analysis.</span></th><td><input type="text" name="download_prefix" class="inputField" value="<?php echo get_option('locan_download_prefix');?>" size="40"/></td></tr>
 			<tr><th scope="row">Track MailTo</th><td><input type="checkbox" id="track_mailto" name="track_mailto" <?php echo (get_option('locan_track_mailto') == 1) ? 'checked="checked"' : '';?> value="1" /> <label for="track_mailto">Track clicks on email(mailto:) links.</label></td></tr>
 			<tr><th scope="row">MailTo Prefix [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Adds this prefix to all clicks on email links for easy analysis.</span></th><td><input type="text" name="mailto_prefix" class="inputField" value="<?php echo get_option('locan_mailto_prefix');?>" size="40"/></td></tr>
-			<tr><th scope="row" valign="top">Additional Tracking Code [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Enter any additional tracking code which you wish to insert within the script. <br />For example to <a href="http://www.google.com/support/analytics/bin/answer.py?hl=en&amp;answer=27268">track all sub domains</a> of <?php echo $server[1];?> in a single profile, enter <br /><code style="color:maroon;">_udn="<?php echo $server[1];?>";</code></span></th><td><textarea class="inputField" name="extra_code" rows="3" cols="40"><?php echo get_option('locan_extra_code');?></textarea></td></tr>
+			<tr><th scope="row" valign="top">Additional Tracking Code [<a class="locanHelpTip" href="#">?</a>]<span class="hidden">Enter any additional tracking code which you wish to insert within the script. <br />For example to <a href="http://www.google.com/support/analytics/bin/answer.py?hl=en&amp;answer=27268">track all sub domains</a> of <?php echo $server[1];?> in a single profile, enter <br /><code style="color:maroon;">pageTracker._setDomainName("<?php echo $server[1];?>");</code></span></th><td><textarea class="inputField" name="extra_code" rows="3" cols="40"><?php echo get_option('locan_extra_code');?></textarea></td></tr>
 			</table>
 			<table border="0" cellspacing="0" cellpadding="5" style="width:100%;">
 			<tr><td><center>
@@ -333,7 +347,41 @@ function locan_admin_options_show(){
 		</div></div></fieldset>
 	</div>
 	</form>
-
+		<div id="locan-ads" class="dbx-group" >
+		<fieldset class="dbx-box">
+		<div class="dbx-h-andle-wrapper"><h3 class="dbx-handle">Promotions and Donations</h3></div>
+		<div class="dbx-c-ontent-wrapper">
+		<div class="dbx-content"><center>
+			<script type="text/javascript"><!--
+			google_ad_client = "pub-0875376866576215";
+			//Local Analytics Referral
+			google_ad_slot = "4918999280";
+			google_ad_width = 110;
+			google_ad_height = 32;
+			google_cpa_choice = ""; // on file
+			//--></script>
+			<script type="text/javascript"
+			src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+			</script>
+			<script type="text/javascript"><!--
+			google_ad_client = "pub-0875376866576215";
+			//Local Analytics Referral - Firefox
+			google_ad_slot = "3394844436";
+			google_ad_width = 110;
+			google_ad_height = 32;
+			google_cpa_choice = ""; // on file
+			//--></script>
+			<script type="text/javascript"
+			src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+			</script>
+			<form style="display:inline;" name="_xclick" action="https://www.paypal.com/cgi-bin/webscr" method="post">
+			<input type="hidden" name="cmd" value="_xclick">
+			<input type="hidden" name="business" value="joycekbabu@gmail.com">
+			<input type="hidden" name="item_name" value="Local Analytics Donation">
+			<input type="hidden" name="currency_code" value="USD">
+			<input type="image" src="http://www.paypal.com/en_US/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="Make payments with PayPal - it's fast, free and secure!">
+			</form>
+		</center></div></div></fieldset></div>
 	<?php
 	locan_admin_uninstall_show();
 }

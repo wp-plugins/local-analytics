@@ -1,23 +1,23 @@
 <?php
 /*
-+-------------------------------------------------------------------+
-|																	|
-|	WordPress Plugin : Local Analytics								|
-|	Copyright (c) 2007 Joyce Babu (email : contact@joycebabu.com)	|
-|																	|
-|	Copyright														|
-|	- Joyce Babu													|
-|	- http://www.joycebabu.com/										|
-|	- You are free to do anything with this script. I will			|
-|		always appreciate if you CAN give a link back to 			|
++-------------------------------------------------------------------------------+
+|																				|
+|	WordPress Plugin : Local Analytics											|
+|	Copyright (c) 2007 Joyce Babu (email : contact@joycebabu.com)				|
+|																				|
+|	Copyright																	|
+|	- Joyce Babu																|
+|	- http://www.joycebabu.com/													|
+|	- You are free to do anything with this script. I will						|
+|		always appreciate if you CAN give a link back to 						|
 |		http://www.joycebabu.com/blog/speed-up-google-analytics-using-simple-php-script.html					|
-|																	|
-|	File Information:												|
-|	- Update and return the local urchin.js							|
-|	- /wp-content/plugins/local-analytics/local-urchin-js.php		|
-|																	|
-+-------------------------------------------------------------------+
-/*
+|																				|
+|	File Information:															|
+|	- Update and return the local ga.js											|
+|	- /wp-content/plugins/local-analytics/local-urchin-js.php					|
+|																				|
++-------------------------------------------------------------------------------+
+
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation; either version 2 of the License, or
@@ -37,7 +37,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 @require('../../../wp-config.php');
 
 // Remote file to download
-$remoteFile = 'http://www.google-analytics.com/urchin.js';
+$remoteFile = ((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off') ? 'http://www.' : 'https://ssl.') . 'google-analytics.com/ga.js';
 // Local File name. Must be made writable
 $localFile = get_option('locan_localfile');
 // Time to cache in hours

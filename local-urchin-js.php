@@ -45,7 +45,7 @@ $cacheTime = ($a = intval(get_option('locan_cache_time'))) ? $a : 24;
 // Connection time out
 $connTimeout = 10;
 // Use Gzip compression
-$useGzip = get_option('locan_cache_time') ? true : false;
+$useGzip = get_option('locan_use_gzip') ? true : false;
 
 if($useGzip){
 	ob_start('ob_gzhandler');

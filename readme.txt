@@ -4,7 +4,7 @@ Donate link: http://www.joycebabu.com/contribute.php
 Tags: google analytics, google, analytics, tracking, statistics, stat
 Requires at least: 2.3
 Tested up to: 2.3.1
-Stable tag: 1.2
+Stable tag: 1.2.1
 
 Local Analytics is a plugin for integrating Google Analytics (http://www.google.com/analytics/) in your Wordpress powered blog. The plugin can download and serve ga.js to your server and automatically update it at regular intervals.
 

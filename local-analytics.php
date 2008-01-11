@@ -3,7 +3,7 @@
 Plugin Name: Local Analytics
 Plugin URI: http://www.joycebabu.com/downloads/local-analytics/
 Description: Periodically downloads and serves ga.js from your server.
-Version: 1.2
+Version: 1.2.2
 Author: Joyce Babu
 Author URI: http://www.joycebabu.com/
 */
@@ -25,7 +25,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-DEFINE('LOCAL_ANALYTICS_VERSION', '1.2');
+DEFINE('LOCAL_ANALYTICS_VERSION', '1.2.2');
 DEFINE('LOCAL_ANALYTICS_PATH', basename(dirname(__FILE__)) . '/' . basename(__FILE__));
 DEFINE('LOCAL_ANALYTICS_ANCHOR_REGEX', '/<a (.*?)href=(["\'])(.*?)\\2(.*?)>(.*?)<\/a>/i');
 
@@ -107,7 +107,9 @@ function locan_insert_code(){
 			$src = "/wp-content/plugins/$locan_dirname/local-urchin-js.php";
 			wp_register_script('local-analytics-urchin', $src, false, '1.0');
 		}else{
-			wp_register_script('local-analytics-urchin', ((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off') ? 'http://www.' : 'https://ssl.') . 'google-analytics.com/ga.js', false, '');
+			//wp_register_script('local-analytics-urchin', ((empty($_SERVER['HTTPS']) || $_SERVER['HTTPS'] == 'off') ? 'http://www.' : 'https://ssl.') . 'google-analytics.com/ga.js', false, '');
+			echo "<script type=\"text/javascript\">\nvar gaJsHost = ((\"https:\" == document.location.protocol) ? \"https://ssl.\" : \"http://www.\");\ndocument.write(unescape(\"%3Cscript src='\" + gaJsHost + \"google-analytics.com/ga.js' type='text/javascript'%3E%3C/script%3E\"));\n</script>";
+
 		}
 		wp_print_scripts(array('local-analytics-urchin'));
 		echo "<script type=\"text/javascript\">\nvar pageTracker = _gat._getTracker(\"" . get_option('locan_uacct') . "\");\n{$extra}pageTracker._initData();\npageTracker._trackPageview();\n</script>\n<!-- End Google Analytics Code by Local Analytics Plugin -->\n";
@@ -149,8 +151,9 @@ function locan_parse_content($content){
 function locan_wp_footer(){
 	global $locan_dirname;
 	if(LOCAL_ANALYTICS_TRACKING_ENABLED && get_option('locan_track_ads')){
+		$wp_address = get_option('siteurl');
 		echo "\n<!-- Begin Ad Click Tracking Code by Local Analytics Plugin -->\n";
-		echo "<script type='text/javascript' src='/wp-content/plugins/$locan_dirname/local-astrack.php'></script>";
+		echo "<script type='text/javascript' src='$wp_address/wp-content/plugins/$locan_dirname/local-astrack.php'></script>";
 		echo "\n<!-- End Ad Click Tracking Code by Local Analytics Plugin -->\n";
 	}
 }
